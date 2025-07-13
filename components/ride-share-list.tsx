@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, MapPin, Users, Plus } from "lucide-react"
+import { Calendar, Clock, MapPin, Users, Plus, Lock } from "lucide-react" // Added Lock icon
 import { CreateRideShareForm } from "@/components/create-ride-share-form"
 import { useAuth } from "@/components/auth-provider"
 
@@ -23,23 +23,32 @@ interface RideShareListProps {
   rides: RideShare[]
 }
 
+const MAX_PREVIEW_ITEMS = 3 // Define max items for preview
+
 export function RideShareList({ rides }: RideShareListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, login } = useAuth()
+
+  const displayedRides = isAuthenticated ? rides : rides.slice(0, MAX_PREVIEW_ITEMS)
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-semibold">Available Rides</h2>
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <Button onClick={() => setShowCreateForm(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Create Ride Share
           </Button>
+        ) : (
+          <Button onClick={login} className="w-full sm:w-auto bg-transparent" variant="outline">
+            <Lock className="h-4 w-4 mr-2" />
+            Sign In to Create
+          </Button>
         )}
       </div>
 
-      {rides.length === 0 ? (
+      {displayedRides.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
             <p className="text-muted-foreground">No ride shares available</p>
@@ -47,7 +56,7 @@ export function RideShareList({ rides }: RideShareListProps) {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {rides.map((ride) => (
+          {displayedRides.map((ride) => (
             <Card key={ride.id} className="touch-manipulation">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg leading-tight">{ride.trail_name}</CardTitle>
@@ -77,13 +86,42 @@ export function RideShareList({ rides }: RideShareListProps) {
                 {ride.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{ride.description}</p>
                 )}
-                <Button className="w-full touch-manipulation" size="sm">
-                  Contact Driver
-                </Button>
+                {isAuthenticated ? (
+                  <Button className="w-full touch-manipulation" size="sm">
+                    Contact Driver
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full touch-manipulation bg-transparent"
+                    size="sm"
+                    variant="outline"
+                    onClick={login}
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Sign In to Contact
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {!isAuthenticated && rides.length > MAX_PREVIEW_ITEMS && (
+        <Card className="text-center py-8">
+          <CardHeader>
+            <Lock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <CardTitle>Sign In to See More</CardTitle>
+            <CardDescription>
+              Create an account or sign in to view all available ride shares and connect with drivers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={login} className="w-full max-w-xs">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {showCreateForm && <CreateRideShareForm onClose={() => setShowCreateForm(false)} />}

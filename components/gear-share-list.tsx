@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DollarSign, Package, Plus } from "lucide-react"
+import { DollarSign, Package, Plus, Lock } from "lucide-react" // Added Lock icon
 import { CreateGearShareForm } from "@/components/create-gear-share-form"
 import { useAuth } from "@/components/auth-provider"
 
@@ -22,23 +22,32 @@ interface GearShareListProps {
   gear: GearShare[]
 }
 
+const MAX_PREVIEW_ITEMS = 3 // Define max items for preview
+
 export function GearShareList({ gear }: GearShareListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, login } = useAuth()
+
+  const displayedGear = isAuthenticated ? gear : gear.slice(0, MAX_PREVIEW_ITEMS)
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Available Gear</h2>
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <Button onClick={() => setShowCreateForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Share Gear
           </Button>
+        ) : (
+          <Button onClick={login} variant="outline">
+            <Lock className="h-4 w-4 mr-2" />
+            Sign In to Share
+          </Button>
         )}
       </div>
 
-      {gear.length === 0 ? (
+      {displayedGear.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
             <p className="text-muted-foreground">No gear available for sharing</p>
@@ -46,7 +55,7 @@ export function GearShareList({ gear }: GearShareListProps) {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {gear.map((item) => (
+          {displayedGear.map((item) => (
             <Card key={item.id}>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -67,13 +76,37 @@ export function GearShareList({ gear }: GearShareListProps) {
 
                 {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
 
-                <Button className="w-full" size="sm">
-                  Contact Owner
-                </Button>
+                {isAuthenticated ? (
+                  <Button className="w-full" size="sm">
+                    Contact Owner
+                  </Button>
+                ) : (
+                  <Button className="w-full bg-transparent" size="sm" variant="outline" onClick={login}>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Sign In to Contact
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {!isAuthenticated && gear.length > MAX_PREVIEW_ITEMS && (
+        <Card className="text-center py-8">
+          <CardHeader>
+            <Lock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <CardTitle>Sign In to See More</CardTitle>
+            <CardDescription>
+              Create an account or sign in to view all available gear shares and interact with owners.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={login} className="w-full max-w-xs">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {showCreateForm && <CreateGearShareForm onClose={() => setShowCreateForm(false)} />}
