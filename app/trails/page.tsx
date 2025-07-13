@@ -3,20 +3,24 @@ import { TrailList } from "@/components/trail-list"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Suspense } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { FeaturedTrailPlaceholder } from "@/components/featured-trail-placeholder" // New import
 
 async function getTrails() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/trails`, {
+    const response = await fetch("/api/trails", {
       cache: "no-store",
     })
 
     if (!response.ok) {
-      throw new Error("Failed to fetch trails")
+      console.error(`Failed to fetch trails: ${response.status} ${response.statusText}`)
+      return []
     }
 
     return response.json()
   } catch (error) {
-    console.error("Failed to fetch trails:", error)
+    console.error("Error fetching trails:", error)
     return []
   }
 }
@@ -45,6 +49,10 @@ export default async function TrailsPage() {
   const trails = await getTrails()
   const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN || ""
 
+  // For demonstration, let's pick a few "featured" trails
+  // If no trails are fetched, featuredTrails will be empty, triggering the placeholder
+  const featuredTrails = trails.slice(0, 3)
+
   return (
     <div className="space-y-6">
       <div>
@@ -63,8 +71,37 @@ export default async function TrailsPage() {
             <TrailMap trails={trails} mapboxAccessToken={mapboxAccessToken} />
           </TabsContent>
 
-          <TabsContent value="list" className="mt-6">
-            <TrailList trails={trails} />
+          <TabsContent value="list" className="mt-6 space-y-8">
+            {/* Featured Trails Section */}
+            <section className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Featured Trails</h2>
+                <Button variant="ghost" asChild>
+                  <Link href="/trails">View All</Link>
+                </Button>
+              </div>
+              <p className="text-muted-foreground">Discover some of the most popular and recommended routes.</p>
+              {featuredTrails.length > 0 ? (
+                <TrailList trails={featuredTrails} />
+              ) : (
+                <FeaturedTrailPlaceholder /> // Display placeholders if no featured trails
+              )}
+            </section>
+
+            {/* All Trails Section */}
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold">All Trails</h2>
+              <p className="text-muted-foreground">A complete list of all Colorado 14ers.</p>
+              {trails.length > 0 ? (
+                <TrailList trails={trails} />
+              ) : (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <p className="text-muted-foreground">No trails available.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </section>
           </TabsContent>
         </Tabs>
       </Suspense>

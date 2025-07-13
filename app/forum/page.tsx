@@ -1,15 +1,21 @@
 import { ForumThreadList } from "@/components/forum-thread-list"
 
 async function getForumThreads() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/forum`, {
-    cache: "no-store",
-  })
+  try {
+    const response = await fetch("/api/forum", {
+      cache: "no-store",
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch forum threads")
+    if (!response.ok) {
+      console.error(`Failed to fetch forum threads: ${response.status} ${response.statusText}`)
+      return []
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error("Error fetching forum threads:", error)
+    return []
   }
-
-  return response.json()
 }
 
 export default async function ForumPage() {

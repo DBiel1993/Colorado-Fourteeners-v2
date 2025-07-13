@@ -8,15 +8,21 @@ interface TrailPageProps {
 }
 
 async function getTrail(id: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/trails/${id}`, {
-    cache: "no-store",
-  })
+  try {
+    const response = await fetch(`/api/trails/${id}`, {
+      cache: "no-store",
+    })
 
-  if (!response.ok) {
+    if (!response.ok) {
+      console.error(`Failed to fetch trail ${id}: ${response.status} ${response.statusText}`)
+      return null
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error(`Error fetching trail ${id}:`, error)
     return null
   }
-
-  return response.json()
 }
 
 export default async function TrailPage({ params }: TrailPageProps) {

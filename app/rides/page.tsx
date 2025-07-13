@@ -1,15 +1,21 @@
 import { RideShareList } from "@/components/ride-share-list"
 
 async function getRideShares() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/rides`, {
-    cache: "no-store",
-  })
+  try {
+    const response = await fetch("/api/rides", {
+      cache: "no-store",
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch ride shares")
+    if (!response.ok) {
+      console.error(`Failed to fetch ride shares: ${response.status} ${response.statusText}`)
+      return []
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error("Error fetching ride shares:", error)
+    return []
   }
-
-  return response.json()
 }
 
 export default async function RidesPage() {

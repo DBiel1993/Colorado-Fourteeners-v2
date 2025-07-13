@@ -22,6 +22,12 @@ const nextConfig = {
     unoptimized: true,
   },
   webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = {
+        ...config.externals,
+        'pg-native': 'commonjs pg-native', // Exclude pg-native from server bundle
+      };
+    }
     // Handle mapbox-gl for client-side
     if (!isServer) {
       config.resolve.fallback = {
@@ -30,7 +36,6 @@ const nextConfig = {
         net: false,
         tls: false,
       }
-      // Removed 'pg' from externals as @vercel/postgres is pure JS
     }
     return config
   },
@@ -39,7 +44,6 @@ const nextConfig = {
     NEXT_PUBLIC_AZURE_AD_TENANT_NAME: process.env.NEXT_PUBLIC_AZURE_AD_TENANT_NAME,
     NEXT_PUBLIC_AZURE_AD_POLICY_NAME: process.env.NEXT_PUBLIC_AZURE_AD_POLICY_NAME,
     NEXT_PUBLIC_REDIRECT_URI: process.env.NEXT_PUBLIC_REDIRECT_URI,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   }
 }
 

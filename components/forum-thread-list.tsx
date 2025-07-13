@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react" // Import useEffect and useCallback
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +8,7 @@ import { MessageSquare, User, Calendar, Plus } from "lucide-react"
 import { CreateForumThreadForm } from "@/components/create-forum-thread-form"
 import { useAuth } from "@/components/auth-provider"
 import Link from "next/link"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select" // New imports
 
 interface ForumThread {
   id: string
@@ -20,34 +21,98 @@ interface ForumThread {
 }
 
 interface ForumThreadListProps {
-  threads: ForumThread[]
+  threads: ForumThread[] // Initial threads from server
 }
 
-export function ForumThreadList({ threads }: ForumThreadListProps) {
+const categories = [
+  "All Categories", // New option for filtering
+  "General Discussion",
+  "Trail Conditions",
+  "Route Planning",
+  "Gear Reviews",
+  "Trip Reports",
+  "Safety & Weather",
+  "Photography",
+  "Beginner Questions",
+]
+
+export function ForumThreadList({ threads: initialThreads }: ForumThreadListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const { isAuthenticated } = useAuth()
+  const [selectedCategory, setSelectedCategory] = useState("All Categories") // State for selected category
+  const [displayedThreads, setDisplayedThreads] = useState<ForumThread[]>(initialThreads) // State for threads to display
+  const [loadingThreads, setLoadingThreads] = useState(false) // State for loading indicator
+
+  const fetchThreads = useCallback(async () => {
+    setLoadingThreads(true)
+    try {
+      const queryParams = selectedCategory !== "All Categories" ? `?category=${selectedCategory}` : ""
+      const response = await fetch(`/api/forum${queryParams}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch forum threads")
+      }
+      const data = await response.json()
+      setDisplayedThreads(data)
+    } catch (error) {
+      console.error("Error fetching forum threads:", error)
+      setDisplayedThreads([]) // Clear threads on error
+    } finally {
+      setLoadingThreads(false)
+    }
+  }, [selectedCategory]) // Re-run when selectedCategory changes
+
+  // Effect to fetch threads when category changes
+  useEffect(() => {
+    fetchThreads()
+  }, [fetchThreads])
+
+  const handleThreadCreated = () => {
+    setShowCreateForm(false)
+    fetchThreads() // Re-fetch threads after a new one is created
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-2xl font-semibold">Discussion Threads</h2>
-        {isAuthenticated && (
-          <Button onClick={() => setShowCreateForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Thread
-          </Button>
-        )}
+        <div className="flex items-center gap-4">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isAuthenticated && (
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Thread
+            </Button>
+          )}
+        </div>
       </div>
 
-      {threads.length === 0 ? (
+      {loadingThreads ? (
         <Card>
           <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">No forum threads yet</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading threads...</p>
+          </CardContent>
+        </Card>
+      ) : displayedThreads.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-muted-foreground">No forum threads yet for this category</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {threads.map((thread) => (
+          {displayedThreads.map((thread) => (
             <Card key={thread.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -80,7 +145,7 @@ export function ForumThreadList({ threads }: ForumThreadListProps) {
         </div>
       )}
 
-      {showCreateForm && <CreateForumThreadForm onClose={() => setShowCreateForm(false)} />}
+      {showCreateForm && <CreateForumThreadForm onClose={handleThreadCreated} />}
     </div>
   )
 }

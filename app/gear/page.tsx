@@ -1,15 +1,23 @@
 import { GearShareList } from "@/components/gear-share-list"
 
 async function getGearShares() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/gear`, {
-    cache: "no-store",
-  })
+  try {
+    const response = await fetch("/api/gear", {
+      cache: "no-store",
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch gear shares")
+    if (!response.ok) {
+      console.error(`Failed to fetch gear shares: ${response.status} ${response.statusText}`)
+      // Return an empty array on non-OK response to allow build to proceed
+      return []
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error("Error fetching gear shares:", error)
+    // Return an empty array on network errors (TypeError: Failed to fetch)
+    return []
   }
-
-  return response.json()
 }
 
 export default async function GearPage() {

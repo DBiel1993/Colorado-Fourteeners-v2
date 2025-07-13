@@ -9,12 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-// Removed direct import of createForumThread
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 
 interface CreateForumThreadFormProps {
-  onClose: () => void
+  onClose: () => void // Changed to a generic onClose to allow re-fetching
 }
 
 const categories = [
@@ -71,7 +70,7 @@ export function CreateForumThreadForm({ onClose }: CreateForumThreadFormProps) {
         description: "Your discussion thread has been created.",
       })
 
-      onClose()
+      onClose() // Call onClose to trigger re-fetch in parent
     } catch (error) {
       toast({
         title: "Error",
