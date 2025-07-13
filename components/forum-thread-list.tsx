@@ -1,14 +1,15 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react" // Import useEffect and useCallback
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useCallback } from "react"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MessageSquare, User, Calendar, Plus } from "lucide-react"
 import { CreateForumThreadForm } from "@/components/create-forum-thread-form"
 import { useAuth } from "@/components/auth-provider"
 import Link from "next/link"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select" // New imports
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ForumThreadPlaceholder } from "@/components/forum-thread-placeholder"
 
 interface ForumThread {
   id: string
@@ -25,7 +26,7 @@ interface ForumThreadListProps {
 }
 
 const categories = [
-  "All Categories", // New option for filtering
+  "All Categories",
   "General Discussion",
   "Trail Conditions",
   "Route Planning",
@@ -39,9 +40,9 @@ const categories = [
 export function ForumThreadList({ threads: initialThreads }: ForumThreadListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const { isAuthenticated } = useAuth()
-  const [selectedCategory, setSelectedCategory] = useState("All Categories") // State for selected category
-  const [displayedThreads, setDisplayedThreads] = useState<ForumThread[]>(initialThreads) // State for threads to display
-  const [loadingThreads, setLoadingThreads] = useState(false) // State for loading indicator
+  const [selectedCategory, setSelectedCategory] = useState("All Categories")
+  const [displayedThreads, setDisplayedThreads] = useState<ForumThread[]>(initialThreads)
+  const [loadingThreads, setLoadingThreads] = useState(false)
 
   const fetchThreads = useCallback(async () => {
     setLoadingThreads(true)
@@ -59,7 +60,7 @@ export function ForumThreadList({ threads: initialThreads }: ForumThreadListProp
     } finally {
       setLoadingThreads(false)
     }
-  }, [selectedCategory]) // Re-run when selectedCategory changes
+  }, [selectedCategory])
 
   // Effect to fetch threads when category changes
   useEffect(() => {
@@ -97,19 +98,8 @@ export function ForumThreadList({ threads: initialThreads }: ForumThreadListProp
         </div>
       </div>
 
-      {loadingThreads ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading threads...</p>
-          </CardContent>
-        </Card>
-      ) : displayedThreads.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">No forum threads yet for this category</p>
-          </CardContent>
-        </Card>
+      {loadingThreads || displayedThreads.length === 0 ? ( // Show placeholder if loading OR no threads
+        <ForumThreadPlaceholder />
       ) : (
         <div className="space-y-4">
           {displayedThreads.map((thread) => (

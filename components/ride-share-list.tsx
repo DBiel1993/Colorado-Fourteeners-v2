@@ -4,9 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, MapPin, Users, Plus, Lock } from "lucide-react" // Added Lock icon
+import { Calendar, Clock, MapPin, Users, Plus, Lock } from "lucide-react"
 import { CreateRideShareForm } from "@/components/create-ride-share-form"
 import { useAuth } from "@/components/auth-provider"
+import { RideSharePlaceholder } from "@/components/ride-share-placeholder" // New import
 
 interface RideShare {
   id: string
@@ -23,7 +24,7 @@ interface RideShareListProps {
   rides: RideShare[]
 }
 
-const MAX_PREVIEW_ITEMS = 3 // Define max items for preview
+const MAX_PREVIEW_ITEMS = 3
 
 export function RideShareList({ rides }: RideShareListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -49,11 +50,7 @@ export function RideShareList({ rides }: RideShareListProps) {
       </div>
 
       {displayedRides.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">No ride shares available</p>
-          </CardContent>
-        </Card>
+        <RideSharePlaceholder /> // Use placeholder when no rides are available
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {displayedRides.map((ride) => (

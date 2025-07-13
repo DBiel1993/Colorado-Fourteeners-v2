@@ -4,9 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DollarSign, Package, Plus, Lock } from "lucide-react" // Added Lock icon
+import { DollarSign, Package, Plus, Lock } from "lucide-react"
 import { CreateGearShareForm } from "@/components/create-gear-share-form"
 import { useAuth } from "@/components/auth-provider"
+import { GearSharePlaceholder } from "@/components/gear-share-placeholder" // New import
 
 interface GearShare {
   id: string
@@ -22,7 +23,7 @@ interface GearShareListProps {
   gear: GearShare[]
 }
 
-const MAX_PREVIEW_ITEMS = 3 // Define max items for preview
+const MAX_PREVIEW_ITEMS = 3
 
 export function GearShareList({ gear }: GearShareListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -48,11 +49,7 @@ export function GearShareList({ gear }: GearShareListProps) {
       </div>
 
       {displayedGear.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">No gear available for sharing</p>
-          </CardContent>
-        </Card>
+        <GearSharePlaceholder /> // Use placeholder when no gear is available
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedGear.map((item) => (
